@@ -53,21 +53,55 @@ public class DesifradoLibroParalelo {
             System.out.println(archivo.toString());
 
         }
-        List<Libro> lista_libros = cargarLibros(lista_archivos,250);
+        List<Libro> lista_libros = cargarLibros(lista_archivos, 250);
 
         for (Libro libro : lista_libros) {
             System.out.println(libro.original.substring(1763, 1800));
         }
         //descifrar
-       /* desifrar(lista_libros, llave, dencoder);
+        descifradoParalelo(lista_libros,  dencoder,llave,5000);
         //guardar archivos descifrado
-
-        guardarLibros(lista_libros, "descifrado");
-*/
+      
+        guardarLibrosParalelo(lista_libros, "descifrado");
+         
         Instant fin = Instant.now();
         long tiempoComputo = Duration.between(inicio, fin).toMillis();
         System.out.println("Tiempo de computo: " + tiempoComputo + " milisegundos");
-     
+
+    }
+   public static void  guardarLibrosParalelo(List<Libro> lista_libros, String extension){
+     for (Libro libro : lista_libros) {
+
+            libro.guardaArchivo(extension);
+        }
+   
+   }
+    public static void descifradoParalelo(List<Libro> lista_libros, LinkedTreeMap<String, LinkedTreeMap> codificador, String llave, int milisegundos) {
+        try {
+            List<Future<String>> lista_textos = new ArrayList();
+            int procesadores = Runtime.getRuntime().availableProcessors();
+            ExecutorService executor = Executors.newFixedThreadPool(procesadores);
+
+            for (Libro libro : lista_libros) {
+                String texto = libro.original;
+                Future<String> cifrado = executor.submit(new Cifrador(llave, texto, codificador));
+                lista_textos.add(cifrado);
+
+            }
+            executor.awaitTermination(milisegundos, TimeUnit.MILLISECONDS);
+            executor.shutdownNow();
+            for (int i = 0; i < lista_textos.size(); i++) {
+
+                for (int j = 0; j < lista_textos.size(); j++) {
+                    Libro libro = lista_libros.get(i);
+                    libro.cifrado = lista_textos.get(i).get().toString();
+                }
+
+            }
+        } catch (Exception e) {
+            System.out.println("cifradoParalelo " + e.getMessage());
+        }
+
     }
 
     public static LinkedTreeMap cargaCipher(String archivo) {

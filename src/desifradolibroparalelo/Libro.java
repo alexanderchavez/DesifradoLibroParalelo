@@ -39,8 +39,8 @@ public class Libro {
             System.out.println(e.getMessage());
         }
     }
-    public void guardaArchivo() {
-        String archivo = this.titulo+".cifrado";
+    public void guardaArchivo(String extension) {
+        String archivo = this.titulo+"."+extension;
         try {
             BufferedWriter writer = new BufferedWriter(new FileWriter(archivo));
             writer.write(this.cifrado);
